@@ -63,7 +63,5 @@ public class RefreshTokenPreProcessorFilter implements Filter {
 			map.setLocked(true);
 			return map;
 		}
-		
 	}
-
 }
