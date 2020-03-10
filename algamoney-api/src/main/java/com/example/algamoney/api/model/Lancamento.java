@@ -45,7 +45,7 @@ public class Lancamento {
 	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "codigo_categoria")
-	private Categoria categora;
+	private Categoria categoria;
 	
 	@NotNull
 	@ManyToOne
@@ -94,11 +94,11 @@ public class Lancamento {
 	public void setTipo(TipoLancamento tipo) {
 		this.tipo = tipo;
 	}
-	public Categoria getCategora() {
-		return categora;
+	public Categoria getCategoria() {
+		return categoria;
 	}
-	public void setCategora(Categoria categora) {
-		this.categora = categora;
+	public void setCategoria(Categoria categoria) {
+		this.categoria = categoria;
 	}
 	public Pessoa getPessoa() {
 		return pessoa;
