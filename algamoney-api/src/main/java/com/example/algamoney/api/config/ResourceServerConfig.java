@@ -47,7 +47,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 	}
 	
 	@Bean
-	private PasswordEncoder passwordEncoder() {
+	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 	
