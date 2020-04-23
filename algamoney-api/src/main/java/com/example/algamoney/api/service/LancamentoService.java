@@ -8,15 +8,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.example.algamoney.api.dto.LancamentoEstatisticaPessoa;
+import com.example.algamoney.api.mail.Mailer;
 import com.example.algamoney.api.model.Lancamento;
 import com.example.algamoney.api.model.Pessoa;
+import com.example.algamoney.api.model.Usuario;
 import com.example.algamoney.api.repository.LancamentoRepository;
 import com.example.algamoney.api.repository.PessoaRepository;
+import com.example.algamoney.api.repository.UsuarioRepository;
 import com.example.algamoney.api.service.exception.PessoaInexistenteOuInativaException;
 
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -27,11 +33,21 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 @Service
 public class LancamentoService {
 	
+	private static final String DESTINATARIOS = "ROLE_PESQUISAR_LANCAMENTO";
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(LancamentoService.class);
+	
 	@Autowired
 	private PessoaRepository pessoaRepository;
 	
 	@Autowired
 	private LancamentoRepository lancamentoRepository;
+	
+	@Autowired
+	private UsuarioRepository usuarioRepository;
+	
+	@Autowired
+	private Mailer mailer;
 
 	public Lancamento salvar(Lancamento lancamento) {
 		validarPessoa(lancamento);
@@ -62,6 +78,36 @@ public class LancamentoService {
 		JasperPrint jasperPrint = JasperFillManager.fillReport(inputStream, parametros, new JRBeanCollectionDataSource(dados));
 		
 		return JasperExportManager.exportReportToPdf(jasperPrint);
+	}
+	
+//	@Scheduled(fixedDelay =  1000 * 60 * 30) método com tempo fixo / @Scheduled(cron = "0 0 6 * * *") - método para executar todos os dias as 6 da manhã
+	@Scheduled(cron = "0 0 6 * * *")
+	public void avisarSobreLancamentosVencidos() {
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Preparando envio de e-mails de aviso de lançamentos vencidos.");
+		}
+		
+		List<Lancamento> vencidos = lancamentoRepository.findByDataVencimentoLessThanEqualAndDataPagamentoIsNull(LocalDate.now());
+		
+		if(vencidos.isEmpty()) {
+			LOGGER.info("Sem lançamentos vencidos para enviar aviso.");
+			
+			return;
+		}
+		
+		LOGGER.info("Existem {} lançamentos vencidos.", vencidos.size());
+		
+		List<Usuario> destinatarios = usuarioRepository.findByPermissoesDescricao(DESTINATARIOS);
+		
+		if(destinatarios.isEmpty()) {
+			LOGGER.warn("Existem lançamentos vencidos, mas o sistema não encontrou destinatários.");
+			
+			return;
+		}
+		
+		mailer.avisarSobreLancamentosVencidos(vencidos, destinatarios);
+		
+		LOGGER.info("Envio de e-mail de aviso concluído.");
 	}
 
 	private void validarPessoa(Lancamento lancamento) {
