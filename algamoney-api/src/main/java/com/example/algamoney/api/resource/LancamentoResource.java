@@ -1,5 +1,8 @@
 package com.example.algamoney.api.resource;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.algamoney.api.dto.LancamentoEstatisticaCategoria;
 import com.example.algamoney.api.dto.LancamentoEstatisticaDia;
@@ -135,5 +139,15 @@ public class LancamentoResource {
 		headers.add("Content-Disposition", "attachment; filename=relatorio_lancamento_por_pessoa.pdf");
 		
 		return ResponseEntity.ok().headers(headers).body(relatorio);
+	}
+	
+	@PostMapping("/anexo")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
+	public String uploadAnexo(@RequestParam MultipartFile anexo) throws IOException {
+		OutputStream out = new FileOutputStream("C:\\Users\\Thiag\\Desktop\\anexo--" + anexo.getOriginalFilename());
+		out.write(anexo.getBytes());
+		out.close();
+		
+		return "ok";
 	}
 }
