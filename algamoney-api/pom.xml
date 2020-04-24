@@ -142,6 +142,12 @@
             <artifactId>jasperreports-fonts</artifactId>
             <version>${jasperreports-fonts.version}</version>
         </dependency>
+        
+        <!-- dependencia para gerar o metamodel -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-jpamodelgen</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
